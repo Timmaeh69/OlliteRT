@@ -230,6 +230,12 @@ internal class ChatCompletionsHandler(
       } else {
         ""
       }
+      // Native initialMessages omit role=system. Restore those client instructions.
+      val nativeSystemText = if (useSchemaInjection) {
+        SchemaInjectionBridge.buildNativeSystemPrompt(perModelSystemPrompt, req.messages)
+      } else {
+        perModelSystemPrompt.takeIf { it.isNotBlank() }
+      }
       val systemPrompts = listOf(perModelSystemPrompt, requestSystemPrompt)
       val samplerConfig = model.configValues.toMap()
       val decision = decideIncrementalReuse(
@@ -256,8 +262,7 @@ internal class ChatCompletionsHandler(
       ConversationPreparation(
         incrementalUserText = decision.newUserText.takeIf { decision.kind == IncrementalDecision.Kind.EXTEND },
         cacheGeneration = decision.cacheGeneration,
-        systemInstruction = perModelSystemPrompt
-          .takeIf { it.isNotBlank() }
+        systemInstruction = nativeSystemText
           ?.let { Contents.of(listOf(Content.Text(it))) },
       )
     }

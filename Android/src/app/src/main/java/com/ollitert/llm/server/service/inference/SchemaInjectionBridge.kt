@@ -105,6 +105,21 @@ object SchemaInjectionBridge {
       )
     }
 
+  /**
+   * Client system messages are omitted from the native initialMessages list.
+   * Preserve them alongside the optional OlliteRT per-model system prompt.
+   */
+  fun buildNativeSystemPrompt(perModelPrompt: String, messages: List<ChatMessage>): String? {
+    val parts = mutableListOf<String>()
+    if (perModelPrompt.isNotBlank()) parts.add(perModelPrompt)
+    for (message in messages) {
+      if (message.role == "system" && message.content.text.isNotBlank()) {
+        parts.add(message.content.text)
+      }
+    }
+    return parts.joinToString("\n\n").takeIf { it.isNotBlank() }
+  }
+
   fun buildInitialMessages(msgs: List<ChatMessage>): List<Message> {
     if (msgs.size <= 1) return emptyList()
     return msgs.dropLast(1)

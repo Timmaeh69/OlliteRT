@@ -109,6 +109,40 @@ class SchemaInjectionBridgeTest {
   }
 
   @Test
+  fun buildNativeSystemPrompt_preservesClientSystemPrompt() {
+    val messages = listOf(
+      ChatMessage(role = "system", content = ChatContent("Quote file content exactly.")),
+      ChatMessage(role = "user", content = ChatContent("Read README.md")),
+    )
+    assertEquals(
+      "Quote file content exactly.",
+      SchemaInjectionBridge.buildNativeSystemPrompt("", messages),
+    )
+  }
+
+  @Test
+  fun buildNativeSystemPrompt_mergesPromptsWithoutDroppingOrder() {
+    val messages = listOf(
+      ChatMessage(role = "system", content = ChatContent("Follow project instructions.")),
+      ChatMessage(role = "user", content = ChatContent("Hello")),
+      ChatMessage(role = "system", content = ChatContent("Do not invent tool outputs.")),
+    )
+    assertEquals(
+      "Local model rules.\n\nFollow project instructions.\n\nDo not invent tool outputs.",
+      SchemaInjectionBridge.buildNativeSystemPrompt("Local model rules.", messages),
+    )
+  }
+
+  @Test
+  fun buildNativeSystemPrompt_ignoresNonSystemMessages() {
+    val messages = listOf(
+      ChatMessage(role = "user", content = ChatContent("Hello")),
+      ChatMessage(role = "tool", content = ChatContent("Output")),
+    )
+    assertEquals(null, SchemaInjectionBridge.buildNativeSystemPrompt("", messages))
+  }
+
+  @Test
   fun buildLastUserInput_normalMessage() {
     val msgs = listOf(
       ChatMessage(role = "user", content = ChatContent("Hello")),

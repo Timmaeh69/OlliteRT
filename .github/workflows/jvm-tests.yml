@@ -58,6 +58,17 @@ jobs:
       - name: Run lint
         run: ./gradlew --no-daemon :app:lintStableDebug
 
+      - name: Build dev debug APK
+        run: ./gradlew --no-daemon :app:assembleDevDebug
+
+      - name: Upload dev debug APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: OlliteRT-dev-debug-${{ github.sha }}
+          path: Android/src/app/build/outputs/apk/dev/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v7
